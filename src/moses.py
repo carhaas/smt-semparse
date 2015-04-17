@@ -17,7 +17,8 @@ class Moses:
             '--e', self.config.tgt,
             '--lm', '0:3:%s/%s.arpa' % (self.config.experiment_dir, self.config.tgt),
             #'-score-options', "'--OnlyDirect --NoPhraseCount'"
-            '--alignment', self.config.symm]
+            '--alignment', self.config.symm,
+			      '-external-bin-dir', self.config.giza]
     if self.config.model == 'hier':
       args += ['-hierarchical', '-glue-grammar']
 
@@ -99,7 +100,7 @@ class Moses:
     else:
       args += [self.config.moses_decode_phrase]
     args += ['%s/model/moses.ini' % self.config.experiment_dir,
-             '--mertdir', '%s/dist/bin' % self.config.moses]
+             '--mertdir', '%s/bin' % self.config.moses]
     if self.config.model == 'hier':
       args += ['--filtercmd', 
                '%s/scripts/training/filter-model-given-input.pl --Hierarchical'\

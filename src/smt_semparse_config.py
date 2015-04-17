@@ -17,8 +17,8 @@ class SMTSemparseConfig(Config):
 
     self.put('moses_train', '%s/scripts/training/train-model.perl' % self.moses)
     self.put('moses_tune', '%s/scripts/training/mert-moses.pl' % self.moses)
-    self.put('moses_decode_phrase', '%s/dist/bin/moses' % self.moses)
-    self.put('moses_decode_hier', '%s/dist/bin/moses_chart' % self.moses)
+    self.put('moses_decode_phrase', '%s/bin/moses' % self.moses)
+    self.put('moses_decode_hier', '%s/bin/moses_chart' % self.moses)
     self.put('bleu_eval', '%s/scripts/generic/multi-bleu.perl' % self.moses)
 
     self.put('wasp_eval', '%s/data/geo-funql/eval/eval.pl' % self.wasp)

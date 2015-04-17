@@ -12,7 +12,7 @@ class GeoWorld:
     log = open('%s/prolog.log' % self.config.experiment_dir, 'w')
     outfile = open('%s/eval.out' % self.config.experiment_dir, 'w')
     p = subprocess.Popen([self.config.prolog,
-                          '-l', self.config.wasp_eval],
+                          '-s', self.config.wasp_eval],
                          stdin=infile,
                          stdout=outfile,
                          stderr=log)

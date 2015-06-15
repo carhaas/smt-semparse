@@ -186,7 +186,6 @@ class Functionalizer:
           mrl_found = True
           break
       if mrl_found == False: result_array.append("no mrl found")
-    hyp_file.close()
     return result_array
 
   #xc = 0
@@ -272,7 +271,7 @@ class Functionalizer:
       
     if self.config.corpus == 'spoc':
       #debug = open('%s/debug.log' % experiment_dir, 'a')
-      temp_dir = tempfile.mkdtemp("", "semparse_functionalizer")
+      temp_dir = tempfile.mkdtemp()
       args = [self.config.cdec_decode,
             '-c', '%s/cdec_validate.ini' % (experiment_dir),
             '-S', '1000',
@@ -315,10 +314,6 @@ class Functionalizer:
       #if suggest_answer=="": return None
       #delete tmp files
       #sys.stderr.write("%s\t%s\n" % (mrl,temp_dir))
-      try:
-        p.kill()
-      except OSError:
-        pass
       shutil.rmtree(temp_dir)
       if "NO PARSE" in parselog: return None
     

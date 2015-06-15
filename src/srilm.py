@@ -10,7 +10,7 @@ class SRILM:
     log = open('%s/lm.log' % self.config.experiment_dir, 'w')
     p = subprocess.Popen([self.config.srilm_ngram_count,
                           '-text', '%s/train.%s.lm' % (self.config.experiment_dir, self.config.tgt),
-                          '-order', '3',
+                          '-order', '5',
                           '-no-sos',
                           '-no-eos',
                           '-lm', '%s/%s.arpa' % (self.config.experiment_dir, self.config.tgt),

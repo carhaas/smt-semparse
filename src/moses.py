@@ -18,7 +18,7 @@ class Moses:
             '--lm', '0:3:%s/%s.arpa' % (self.config.experiment_dir, self.config.tgt),
             #'-score-options', "'--OnlyDirect --NoPhraseCount'"
             '--alignment', self.config.symm,
-			      '-external-bin-dir', self.config.giza]
+			'-external-bin-dir', self.config.giza]
     if self.config.model == 'hier':
       args += ['-hierarchical', '-glue-grammar']
 
@@ -112,7 +112,7 @@ class Moses:
     log.close()
     os.chdir(wd)
 
-  def run_decode(self):
+  def run_decode(self, neg=False):
     if self.config.model == 'phrase':
       args = [self.config.moses_decode_phrase]
     elif self.config.model == 'hier':
@@ -120,23 +120,58 @@ class Moses:
     else:
       assert False
 
-    if self.config.run == 'test':
+    if self.config.run == 'test' or self.config.run == 'all':
       args += ['-f', '%s/mert-work/moses.ini' % self.config.experiment_dir]
     else:
       args += ['-f', '%s/model/moses.ini' % self.config.experiment_dir]
-    #args += ['-f', '%s/model/moses.ini' % self.config.experiment_dir]
 
-    args += ['-drop-unknown',
+    if neg is True:
+      args += ['-drop-unknown',
+             '-n-best-list', '%s/hyp_neg.%s.nbest' % (self.config.experiment_dir, self.config.tgt),
+                             str(self.config.nbest), 'distinct',
+             '-threads', '3']
+      infile = open('%s/test_neg.%s' % (self.config.experiment_dir, self.config.src))   
+      outfile = open('%s/hyp_neg.%s' % (self.config.experiment_dir, self.config.tgt), 'w')
+      log = open('%s/decode_neg.log' % self.config.experiment_dir, 'w')
+    else:
+      args += ['-drop-unknown',
              '-n-best-list', '%s/hyp.%s.nbest' % (self.config.experiment_dir, self.config.tgt),
                              str(self.config.nbest), 'distinct',
              '-threads', '3']
-
-    #nullfile = open(os.devnull, 'w')
-    infile = open('%s/test.%s' % (self.config.experiment_dir, self.config.src))
-    outfile = open('%s/hyp.%s' % (self.config.experiment_dir, self.config.tgt), 'w')
-    log = open('%s/decode.log' % self.config.experiment_dir, 'w')
+      infile = open('%s/test.%s' % (self.config.experiment_dir, self.config.src))
+      outfile = open('%s/hyp.%s' % (self.config.experiment_dir, self.config.tgt), 'w')
+      log = open('%s/decode.log' % self.config.experiment_dir, 'w')
     p = subprocess.Popen(args, stdin=infile, stdout=outfile, stderr=log)
     p.wait()
     infile.close()
     log.close()
     outfile.close()
+
+  def decode_sentence(self, experiment_dir, sentence, temp_dir):
+    if self.config.model == 'phrase':
+      args = [self.config.moses_decode_phrase]
+    elif self.config.model == 'hier':
+      args = [self.config.moses_decode_hier]
+    else:
+      assert False
+
+    if self.config.run == 'test' or self.config.run == 'all':
+      args += ['-f', '%s/mert-work/moses.ini' % experiment_dir]#change
+    else:
+      args += ['-f', '%s/model/moses.ini' % experiment_dir]
+
+    args += ['-drop-unknown',
+             '-n-best-list', '%s/nbest.tmp' % temp_dir,
+                             str(self.config.nbest), 'distinct',
+             '-threads', '1']
+
+    infile = open('%s/sent.tmp' % temp_dir, 'w')
+    print >>infile, sentence
+    infile.close
+    infile = open('%s/sent.tmp' % temp_dir, 'r')
+    nullfile = open(os.devnull, 'w')
+    p = subprocess.Popen(args, stdin=infile, stdout=nullfile, stderr=nullfile)
+    p.wait()
+    infile.close()
+    return
+

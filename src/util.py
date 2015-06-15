@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import re
 from collections import defaultdict
 
@@ -6,12 +8,13 @@ ARITY_STR = 's'
 ARITY_ANY = '*'
 
 def after_nth(mrl, token, n):
-  #print mrl, token
   while n > 0:
-    m = re.search(r'\b%s\b' % token, mrl)
-    #m = re.search(r'(^|[(, ])%s[(),]' % token, mrl)
-    mrl = mrl[m.end()-1:]
-    n = n - 1;
+    try:
+      m = re.search(r'\b%s\b' % re.sub(r'([\.\\\+\*\?\[\^\]\$\(\)\{\}\!\<\>\|\:\-])', r'\\\1', token), mrl)
+      mrl = mrl[m.end()-1:]
+      n = n - 1;
+    except:
+      print "Warning error on token %s in mrl %s" % (token,mrl)
   return mrl
 
 def count_arguments(s):
@@ -40,7 +43,6 @@ def count_arguments(s):
 
 def fun_to_mrl(mrl, star_top=False):
   mrl = mrl.strip()
-
   mrl = re.sub(r"' *([A-Za-z0-9_ ]+?) *'", lambda x: '%s%s%s' % (x.group(1).replace(' ', '_'), ARITY_SEP, ARITY_STR), mrl)
   mrl = re.sub(r'\s+', ' ', mrl)
   mrl_noparens = re.sub(r'[\(\)]', ' ', mrl)
@@ -53,7 +55,6 @@ def fun_to_mrl(mrl, star_top=False):
   for token in mrl_nocommas.split():
     seen[token] += 1
     args = count_arguments(after_nth(mrl, token, seen[token]))
-    #print token, args, after_nth(mrl, token, seen[token])
     if token[-len(ARITY_SEP)-len(ARITY_STR):] == '%s%s' % (ARITY_SEP, ARITY_STR):
       mrl_labeled_tokens.append(token)
     else:
@@ -63,5 +64,32 @@ def fun_to_mrl(mrl, star_top=False):
     tok = mrl_labeled_tokens[0]
     sep = tok.rindex(ARITY_SEP)
     mrl_labeled_tokens[0] = tok[:sep] + ARITY_SEP + ARITY_ANY
-  
   return ' '.join(mrl_labeled_tokens)
+
+def spoc_to_mrl(mrl, star_top=False):
+  mrl = mrl.strip()
+  mrl = re.sub(" ", r"€", mrl)
+  mrl = re.sub(r"(?<=([^,\(\)]))'(?=([^,\(\)]))", r"XXXXX", mrl)#edited
+  mrl = re.sub(r"' *(.+?) *'", lambda x: '%s%s%s' % (x.group(1).replace(' ', '€'), ARITY_SEP, ARITY_STR), mrl)
+  mrl = re.sub(r'\s+', ' ', mrl)
+  mrl_noparens = re.sub(r'[\(\)]', ' ', mrl)
+  mrl_noparens = re.sub(r'\s+', ' ', mrl_noparens)
+  mrl_nocommas = re.sub(r',', ' ', mrl_noparens)
+  mrl_nocommas = re.sub(r'\s+', ' ', mrl_nocommas)
+  mrl_labeled_tokens = []
+  seen = defaultdict(lambda:0)
+  for token in mrl_nocommas.split():
+    seen[token] += 1
+    if token.endswith("@s"):
+      mrl_labeled_tokens.append(token)
+      continue
+    args = count_arguments(after_nth(mrl, token, seen[token]))
+    mrl_labeled_tokens.append('%s%s%d' % (token, ARITY_SEP, args))
+
+  if star_top:
+    tok = mrl_labeled_tokens[0]
+    sep = tok.rindex(ARITY_SEP)
+    mrl_labeled_tokens[0] = tok[:sep] + ARITY_SEP + ARITY_ANY
+  joined = ' '.join(mrl_labeled_tokens)
+  joined = re.sub("XXXXX", r"'", joined)
+  return joined

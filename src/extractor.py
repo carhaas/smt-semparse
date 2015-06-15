@@ -2,8 +2,8 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem.snowball import GermanStemmer
 import os
 import re
-import util
 import xml.etree.ElementTree as ET
+import util
 
 class IdStemmer:
   def stem(self, word):
@@ -30,6 +30,8 @@ class Extractor:
       self.run_robo()
     elif self.config.corpus == 'atis':
       self.run_atis()
+    elif self.config.corpus == 'spoc':
+      self.run_spoc()
     else:
       assert False
 
@@ -309,6 +311,128 @@ class Extractor:
     tune_nl.close()
     tune_mrl.close()
 
+  def run_spoc(self):
+
+    train_nl = open('%s/train.nl' % self.config.experiment_dir, 'w')
+    train_nl_lm = open('%s/train.nl.lm' % self.config.experiment_dir, 'w')
+    train_mrl = open('%s/train.mrl' % self.config.experiment_dir, 'w')
+    train_mrl_lm = open('%s/train.mrl.lm' % self.config.experiment_dir, 'w')
+    train_fun = open('%s/train.fun' % self.config.experiment_dir, 'w')
+    tune_nl = open('%s/tune.nl' % self.config.experiment_dir, 'w')
+    tune_mrl = open('%s/tune.mrl' % self.config.experiment_dir, 'w')
+    tune_gold = open('%s/tune.gold' % self.config.experiment_dir, 'w')
+    test_nl = open('%s/test.nl' % self.config.experiment_dir, 'w')
+    test_no_stem_nl = open('%s/test.no_stem.nl' % self.config.experiment_dir, 'w')
+    test_mrl = open('%s/test.mrl' % self.config.experiment_dir, 'w')
+    test_fun = open('%s/test.fun' % self.config.experiment_dir, 'w')
+    test_gold = open('%s/test.gold' % self.config.experiment_dir, 'w')
+    
+    if self.config.neg!="":
+      test_neg_nl = open('%s/test_neg.nl' % self.config.experiment_dir, 'w')
+      test_neg_mrl = open('%s/test_neg.mrl' % self.config.experiment_dir, 'w')
+      test_neg_fun = open('%s/test_neg.fun' % self.config.experiment_dir, 'w')
+      test_neg_gold = open('%s/test_neg.gold' % self.config.experiment_dir, 'w')
+      test_neg_no_stem_nl = open('%s/test_neg.no_stem.nl' % self.config.experiment_dir, 'w')
+
+    #extract train
+    train_nl_location ='%s/%s.%s' % (self.config.data_dir,self.config.train,self.config.lang)
+    train_mrl_location ='%s/%s.mrl' % (self.config.data_dir,self.config.train)
+    
+    with open(train_nl_location, 'r') as corpus_nl:
+      for nl in corpus_nl:
+        nl = self.preprocess_nl(nl)
+        print >>train_nl, nl
+        print >>train_nl_lm, '<s>', nl, '</s>'   
+
+    with open(train_mrl_location, 'r') as corpus_mrl:
+      for fun in corpus_mrl:
+        mrl = util.spoc_to_mrl(fun)
+        print >>train_mrl, mrl
+        print >>train_mrl_lm, '<s>', mrl, '</s>'
+        print >>train_fun, fun.strip()   
+
+    #extract tune
+    tune_nl_location ='%s/%s.%s' % (self.config.data_dir,self.config.tune,self.config.lang)
+    tune_mrl_location ='%s/%s.mrl' % (self.config.data_dir,self.config.tune)
+    
+    with open('%s/%s.gold' % (self.config.data_dir,self.config.tune), 'r') as corpus_gold:
+      for gold in corpus_gold:
+        print >>tune_gold, gold.strip()
+    
+    with open(tune_nl_location, 'r') as corpus_nl:
+      for nl in corpus_nl:
+        nl = self.preprocess_nl(nl)
+        print >>tune_nl, nl
+
+    with open(tune_mrl_location, 'r') as corpus_mrl:
+      for fun in corpus_mrl:
+        mrl = util.spoc_to_mrl(fun)
+        print >>tune_mrl, mrl  
+          
+    #extract test
+    with open('%s/%s.gold' % (self.config.data_dir,self.config.test), 'r') as corpus_gold:
+      for gold in corpus_gold:
+        print >>test_gold, gold.strip()
+
+    with open('%s/%s.%s' % (self.config.data_dir,self.config.test,self.config.lang), 'r') as corpus_nl:
+      for nl in corpus_nl:
+        nl_no_stem = nl.strip()
+        if nl_no_stem[-2:] == ' .' or nl_no_stem[-2:] == ' ?':
+          nl_no_stem = nl_no_stem[:-2]
+        if nl_no_stem[-1:] == '.' or nl_no_stem[-1:] == '?':
+          nl_no_stem = nl_no_stem[:-1]
+        nl = self.preprocess_nl(nl)
+        print >>test_nl, nl
+        print >>test_no_stem_nl, nl_no_stem
+
+    with open('%s/%s.mrl' % (self.config.data_dir,self.config.test), 'r') as corpus_mrl:
+      for fun in corpus_mrl:
+        mrl = util.spoc_to_mrl(fun)
+        print >>test_fun, fun.strip()
+        print >>test_mrl, mrl
+    
+    #extract neg    
+    if self.config.neg!="":
+      with open('%s/%s.gold' % (self.config.data_dir,self.config.neg), 'r') as corpus_gold:
+        for gold in corpus_gold:
+          print >>test_neg_gold, gold.strip()
+
+      with open('%s/%s.%s' % (self.config.data_dir,self.config.neg,self.config.lang), 'r') as corpus_nl:
+        for nl in corpus_nl:
+          nl_no_stem = nl.strip()
+          if nl_no_stem[-2:] == ' .' or nl_no_stem[-2:] == ' ?':
+            nl_no_stem = nl_no_stem[:-2]
+          if nl_no_stem[-1:] == '.' or nl_no_stem[-1:] == '?':
+            nl_no_stem = nl_no_stem[:-1]
+          nl = self.preprocess_nl(nl)
+          print >>test_neg_nl, nl
+          print >>test_neg_no_stem_nl, nl_no_stem
+
+      with open('%s/%s.mrl' % (self.config.data_dir,self.config.neg), 'r') as corpus_mrl:
+        for fun in corpus_mrl:
+          mrl = util.spoc_to_mrl(fun)
+          print >>test_neg_fun, fun.strip()
+          print >>test_neg_mrl, mrl
+          
+      test_neg_nl.close()
+      test_neg_mrl.close()
+      test_neg_fun.close()
+      test_neg_gold.close()
+      test_neg_no_stem_nl.close()
+          
+    train_nl.close()
+    train_nl_lm.close()
+    train_mrl.close()
+    train_mrl_lm.close()
+    train_fun.close()
+    test_nl.close()
+    test_mrl.close()
+    test_fun.close()
+    test_gold.close()
+    tune_nl.close()
+    tune_mrl.close()
+    test_no_stem_nl.close()
+    
   def get_folds(self):
 
     if self.config.corpus == 'geo':
@@ -351,13 +475,17 @@ class Extractor:
 
   def preprocess_nl(self, nl):
     nl = nl.strip().lower()
+    nl = nl.replace('@', 'xatx')
     if self.config.stem and self.config.lang == 'de':
       # German stemmer can't handle UTF-8
       nl = nl.encode('ascii', 'ignore')
     else:
-      nl = nl.encode('utf-8', 'ignore')
+      if self.config.corpus == 'geo':
+        nl = nl.encode('utf-8', 'ignore')
     if nl[-2:] == ' .' or nl[-2:] == ' ?':
       nl = nl[:-2]
+    if nl[-1:] == '.' or nl[-1:] == '?':
+      nl = nl[:-1]
     if self.config.stem:
       nl = ' '.join([self.stemmer.stem(tok) for tok in nl.split()])
     return nl
@@ -369,9 +497,6 @@ class Extractor:
     mrl = mrl.replace('.', 'xxd')
     mrl = mrl.replace("'", 'xxq')
     mrl = mrl.replace('/', 'xxs')
-    #mrl = re.sub(r"(' *[^'()]*)\'([^'()]* *')", r'\1_q_\2', mrl)
-    #mrl = re.sub(r"(' *[^'()]*)\.([^'()]* *')", r'\1_dot_\2', mrl)
-    #mrl = re.sub(r"(' *[^'()]*)\/([^'()]* *')", r'\1_slash_\2', mrl)
     return mrl
 
   def clang_to_fun(self, clang):

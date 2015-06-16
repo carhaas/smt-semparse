@@ -269,7 +269,7 @@ scfg_max_span_limit=20')
             '-g', '%s/grammar/' % (temp_dir),
             '-c', '%s/extract.ini' % (experiment_dir),
             '--tight_phrases', '0']
-    p = subprocess.Popen(args, stdin=infile, stdout=outfile, stderr=debug)
+    p = subprocess.Popen(args, stdin=infile, stdout=outfile, stderr=nullfile)
     p.wait()
     infile.close()
     outfile.close()
@@ -287,7 +287,7 @@ scfg_max_span_limit=20')
             '-k', '%s' % (self.config.nbest), '-r',
             '-i', '%s/sent.inline.tmp' % (temp_dir)]
     outfile = open('%s/nbest.tmp' % temp_dir, 'w')
-    p = subprocess.Popen(args, stdin=nullfile, stdout=outfile, stderr=debug)
+    p = subprocess.Popen(args, stdin=nullfile, stdout=outfile, stderr=nullfile)
     p.wait()
     infile.close()
     outfile.close()

@@ -1,4 +1,4 @@
-smt_semparse: /workspace/smtsemparse
+smt_semparse: /workspace/osm/rebol/pyrebol/smtsemparse
 
 moses:  /toolbox/moses/
 giza:  /toolbox/giza-pp/bin/

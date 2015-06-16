@@ -1,9 +1,8 @@
-smt_semparse: /workspace/osm/git/smt-semparse
+smt_semparse: /workspace/smtsemparse
 
 moses:  /toolbox/moses/
 giza:  /toolbox/giza-pp/bin/
-srilm:  /toolbox/srilm/
-prolog: /usr/bin/swipl
-wasp:   /workspace/grounded/wasp-1.0
+cdec:  /toolbox/cdec/
+srilm: /toolbox/srilm
 
 srilm_arch: i686-m64

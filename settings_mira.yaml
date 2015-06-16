@@ -1,0 +1,24 @@
+nbest:   100       # how many entries in the nbest list?
+corpus:  spoc       # which corpus? [geo, robo]
+lang:    en        # which language? [en, de, el, th]
+stem:    true     # run the stemmer?
+symm:    intersect  # which symmetrization? [e.g. srctotgt, tgttosrc, grow, ...]
+np:      false      # use NP list?
+np_type: np       # what version of NP list?
+model:   hier      # which machine translation model? [phrase, hier]
+run:     test      # which experiment? [dev, test, debug, all]. for SPOC only test is valid, any other needs to be modified via train, tune & test set
+workdir: work      # where?
+weights: weights.mira-final.gz #mira to run mira, mert to run mert else location of the weight file
+train:   baseship.train #assumed folder level smt-semparse/data/spoc/
+tune:    baseship.train
+test:    baseship.test
+neg:     baseship.test.neg #leave empty if none
+insertat: true
+
+# experimental, and unrelated to published work
+retrain:     false   # after tuning, re-extract phrases from tune and train data
+filter:      false   # filter malformed trees from phrase table?
+lfrac:       1.0     # what fraction of training sentences should be labeled?
+monolingual: false   # use monolingual data?
+ul_only:     false   # reweight only with unlabeled data
+nlg:         false   # do MRL->NL rather than semantic parsing

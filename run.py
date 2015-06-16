@@ -4,8 +4,10 @@ import os
 import datetime
 import logging
 from src.evaluator import Evaluator
+from src.sigf import SIGF
 from src.smt_semparse_config import SMTSemparseConfig
 from src.smt_semparse_experiment import SMTSemparseExperiment
+import sys
 
 LOGFILE_NAME = 'run.log'
 
@@ -17,7 +19,7 @@ def run_one(config):
   assert not os.path.exists(run_work_dir)
   os.makedirs(run_work_dir)
   config.put('work_dir', run_work_dir)
-  if os.path.exists('latest'):
+  if os.path.lexists('latest'):
     os.remove('latest')
   os.symlink(run_work_dir, 'latest')
 
@@ -34,19 +36,29 @@ def run_one(config):
   elif config.run == 'dev':
     for i in range(10):
       experiment.run_fold(i)
-  elif config.run == 'test':
+  elif config.run == 'test' or config.run == 'all':
     experiment.run_split()
   else:
     assert False
 
   if not config.nlg:
     logging.info('evaluating')
-    Evaluator(config).run()
+    if config.neg:
+      Evaluator(config).run(True)
+      SIGF(config).run(True)
+    else:
+      Evaluator(config).run(False,)
+      SIGF(config).run()
+    
 
 if __name__ == '__main__':
 
+  if len(sys.argv) != 2: 
+    sys.stderr.write("usage: python run.py settings");
+    sys.exit(1)
+
   # load config
-  config = SMTSemparseConfig('settings.yaml', 'dependencies.yaml')
+  config = SMTSemparseConfig(sys.argv[1], 'dependencies.yaml')
 
   # create base work dir if it doesn't exist
   base_work_dir = os.path.join(config.smt_semparse, config.workdir)
